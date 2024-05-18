@@ -7,6 +7,10 @@ export const privateRoutes = (props) => {
         index: true,
         path: "/home",
         element: <Home title="Home" {...props} />,
+    }, {
+        index: true,
+        path: "/car",
+        element: "upload mobil",
     }]
 }
 

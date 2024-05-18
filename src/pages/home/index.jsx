@@ -1,6 +1,12 @@
+import BarChart from "../../components/dashboard/barchart";
+import DataTables from "../../components/dashboard/datatable";
+
 const Home = () => {
     return (
-        <div>Ini Homepage</div>
+        <div className="d-flex gap-5 flex-column">
+            <BarChart />
+            <DataTables />
+        </div>
     )
 }
 

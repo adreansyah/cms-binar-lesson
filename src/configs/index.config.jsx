@@ -3,7 +3,7 @@ import { privateRoutes, publicRoutes } from "./router.config";
 import { useEffect } from "react";
 import Layout from "../layout";
 
-const isLoggedIn = true;
+const isLoggedIn = localStorage.getItem('TOKEN');
 
 export const AppCreatePublicRoutes = (props) => {
     const routes = useRoutes(publicRoutes(props));
@@ -14,7 +14,7 @@ export const AppCreatePrivateRoutes = (props) => {
     const routes = useRoutes(privateRoutes(props));
     const navigate = useNavigate();
     useEffect(() => {
-        navigate('/home');
+        // navigate('/home');
     }, [navigate]);
     return routes;
 }
