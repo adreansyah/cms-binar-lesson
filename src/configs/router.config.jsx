@@ -1,3 +1,5 @@
+import ListCar from "../pages/car"
+import CarForm from "../pages/car/form"
 import Home from "../pages/home"
 import Login from "../pages/login"
 
@@ -10,7 +12,19 @@ export const privateRoutes = (props) => {
     }, {
         index: true,
         path: "/car",
-        element: "upload mobil",
+        element: <ListCar title="List Car" {...props} />,
+    }, {
+        index: true,
+        path: "/car/form",
+        element: <CarForm title="Add New Car" {...props} />,
+    }, {
+        index: true,
+        path: "/car/:id",
+        element: "detail mobil",
+    }, {
+        index: true,
+        path: "/car/:id/edit",
+        element: <CarForm title="Created Car" {...props} />,
     }]
 }
 
