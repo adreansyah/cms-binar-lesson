@@ -4,6 +4,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { format } from 'date-fns'
 import { useNavigate } from "react-router";
+import ic_delete from '../../assets/images/logo.delete.png';
 
 const convertMoney = (number = 0) => {
     const idr = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(
@@ -14,8 +15,16 @@ const convertMoney = (number = 0) => {
 const ListCar = (props) => {
     const [data, setdata] = useState(null);
     const navigate = useNavigate();
+    const [open, setopen] = useState(false);
+    const [sendId, setSendId] = useState(null);
     const fetchApi = () => {
         axios.get('https://api-car-rental.binaracademy.org/admin/v2/car', {
+            params: {
+                page: 1,
+                // pageCount:
+                pageSize: 10
+
+            },
             headers: {
                 access_token: localStorage?.getItem('TOKEN')
             }
@@ -64,7 +73,7 @@ const ListCar = (props) => {
                                         background: 'white',
                                         width: '100%',
                                     }}>
-                                        <img src={item.image ?? Car} alt='picimages' style={{ width: '100%' }} />
+                                        <img src={item.image ?? Car} alt='picimages' style={{ width: '100%', height: 210 }} />
                                         <div className="d-flex flex-column gap-2">
                                             <h4 style={{ fontSize: '14px', fontWeight: 'normal' }}>{item.name ?? 'Unindetify car'}</h4>
                                             <h4 style={{ fontSize: '14px', fontWeight: '700' }}>{convertMoney(item?.price)} / Hari</h4>
@@ -78,11 +87,14 @@ const ListCar = (props) => {
                                             </span>
                                         </div>
                                         <div className="d-flex gap-4 w-100 pt-3">
-                                            <Button className="w-100 d-flex gap-2 align-items-center justify-content-center" size="md" color="danger" outline>
+                                            <Button onClick={() => {
+                                                setopen(!open)
+                                                setSendId(item?.id)
+                                            }} className="w-100 d-flex gap-2 align-items-center justify-content-center" size="md" color="danger" outline>
                                                 <i className="fa fa-trash" />
                                                 Delete
                                             </Button>
-                                            <Button className="w-100 d-flex gap-2 align-items-center justify-content-center" size="md" color="success">
+                                            <Button type="button" onClick={() => navigate(`/car/${item.id}/edit`)} className="w-100 d-flex gap-2 align-items-center justify-content-center" size="md" color="success">
                                                 <i className="fa fa-edit" />
                                                 Edit
                                             </Button>
@@ -93,6 +105,53 @@ const ListCar = (props) => {
                         })
                     }
                 </Row>
+            </div>
+            <ModalDelete open={open} setopen={setopen} id={sendId} refetch={() => { fetchApi() }} />
+        </div>
+    )
+}
+
+const ModalDelete = ({ open, setopen, id, refetch }) => {
+    const navigate = useNavigate();
+    const removeApi = () => {
+        axios.delete(`https://api-car-rental.binaracademy.org/admin/car/${id}`, {
+            headers: {
+                access_token: localStorage?.getItem('TOKEN')
+            }
+        }).then(() => {
+            navigate('/car');
+            setopen(false);
+            document.body.style.overflow = '';
+            refetch();
+        })
+    }
+    useEffect(() => {
+        if (open) {
+            document.body.style.overflow = 'hidden'
+        }
+
+    }, [open]);
+    if (!open) return <div />;
+    return (
+        <div className="position-fixed w-100" style={{
+            background: '#0000004a',
+            height: '100vh',
+            left: 0,
+            top: '0',
+        }}>
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+                <div className="h-50 w-25 bg-white d-flex flex-column gap-2 text-center justify-content-center align-items-center">
+                    <img src={ic_delete} alt='remove-pict' />
+                    <h4 style={{ fontSize: 16 }}>Menghapus Data Mobil</h4>
+                    <p style={{ font: 14 }}>Setelah dihapus, data mobil tidak dapat dikembalikan. Yakin ingin menghapus?</p>
+                    <div className="d-flex px-5 gap-3 w-100">
+                        <Button onClick={removeApi} size="sm" className="w-100" style={{ color: 'white', background: '#0D28A6' }} type="button">ya</Button>
+                        <Button onClick={() => {
+                            setopen(!open);
+                            document.body.style.overflow = ''
+                        }} size="sm" className="w-100" style={{ color: '#0D28A6', background: 'white', border: '1px solid #0D28A6' }} type="button">Tidak</Button>
+                    </div>
+                </div>
             </div>
         </div>
     )

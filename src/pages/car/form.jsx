@@ -1,18 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Col, Input, Row } from "reactstrap";
 import { FileUploader } from "react-drag-drop-files";
 import axios from "axios";
+import { useNavigate, useParams } from "react-router";
 
 const fileTypes = ["JPG", "PNG", "GIF"];
-
 const CarForm = (props) => {
+    const navigate = useNavigate()
+    const { id } = useParams()
     const [state, setState] = useState({
         name: '',
         price: '',
         category: '',
         status: false,
-        image: ''
+        image: null,
     });
+    const [preview, setpreview] = useState(null);
+    useEffect(() => {
+        if (id) {
+            axios.get(`https://api-car-rental.binaracademy.org/admin/car/${id}`, {
+                headers: {
+                    access_token: localStorage?.getItem('TOKEN')
+                }
+            }).then(result => {
+                setState(prev => ({
+                    ...prev,
+                    name: result?.data?.name,
+                    price: result?.data?.price,
+                    category: result?.data?.category
+                }))
+                if (result?.data?.image) {
+                    setpreview(result?.data?.image);
+                }
+            })
+        }
+    }, [id])
     const onchange = (e) => {
         const { name, value } = e.target;
         setState(prev => ({
@@ -20,7 +42,18 @@ const CarForm = (props) => {
             [name]: value
         }))
     }
+    function getBase64(file) {
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            setpreview(reader.result)
+        };
+        reader.onerror = function (error) {
+            console.log('Error: ', error);
+        };
+    }
     const handleChange = (file) => {
+        getBase64(file)
         setState(prev => ({
             ...prev,
             image: file
@@ -28,14 +61,34 @@ const CarForm = (props) => {
     };
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(state);
-        axios.post('https://api-car-rental.binaracademy.org/admin/car', {
-            ...state
-        }, {
-            headers: {
-                access_token: localStorage?.getItem('TOKEN')
+        if (id) {
+            const formData = new FormData();
+            if (state?.image) {
+                formData.append("image", state?.image);
             }
-        }).then(result=>console.log(result))
+            formData.append("name", state?.name);
+            formData.append("category", state?.category);
+            formData.append("price", state?.price);
+            formData.append("status", state?.status);
+            axios.put(`https://api-car-rental.binaracademy.org/admin/car/${id}`, formData, {
+                headers: {
+                    access_token: localStorage?.getItem('TOKEN')
+                }
+            }).then(() => navigate('/car'))
+        }
+        else {
+            const formData = new FormData();
+            formData.append("image", state?.image);
+            formData.append("name", state?.name);
+            formData.append("category", state?.category);
+            formData.append("price", state?.price);
+            formData.append("status", state?.status);
+            axios.post('https://api-car-rental.binaracademy.org/admin/car', formData, {
+                headers: {
+                    access_token: localStorage?.getItem('TOKEN')
+                }
+            }).then(() => navigate('/car'))
+        }
     }
     return (
         <div>
@@ -48,11 +101,11 @@ const CarForm = (props) => {
                         <Col lg={10} className="d-flex flex-column gap-4">
                             <div className="d-flex gap-4 align-items-center">
                                 <label style={{ width: '135px' }}>Nama/tipe Mobile</label>
-                                <Input onChange={onchange} name="name" className="w-50" />
+                                <Input onChange={onchange} name="name" className="w-50" value={state?.name} />
                             </div>
                             <div className="d-flex gap-4 align-items-center">
                                 <label style={{ width: '135px' }}>Harga</label>
-                                <Input onChange={onchange} name="price" className="w-50" />
+                                <Input onChange={onchange} name="price" className="w-50" value={state.price} />
                             </div>
                             <div className="d-flex gap-4 align-items-center">
                                 <label style={{ width: '135px' }}>Foto</label>
@@ -70,14 +123,19 @@ const CarForm = (props) => {
                                     }
                                 />
                             </div>
+                            {preview && <div>
+                                <div>
+                                    <img width={500} src={preview} alt='pict-alt' />
+                                </div>
+                            </div>}
                             <div className="d-flex gap-4 align-items-center">
                                 <label style={{ width: '135px' }}>Kategori</label>
-                                <Input onChange={onchange} name='category' className="w-50" />
+                                <Input onChange={onchange} name='category' className="w-50" value={state?.category} />
                             </div>
                         </Col>
                     </Row>
                     <div className="mt-4 d-flex gap-3">
-                        <Button type="button" size="sm" style={{ background: '#FFF', color: '#0D28A6' }}>Cancel</Button>
+                        <Button onClick={() => navigate('/car')} type="button" size="sm" style={{ background: '#FFF', color: '#0D28A6' }}>Cancel</Button>
                         <Button type="submit" size="sm" style={{ background: '#0D28A6' }}>Save</Button>
                     </div>
                 </div>
@@ -85,5 +143,4 @@ const CarForm = (props) => {
         </div>
     )
 };
-
 export default CarForm;
